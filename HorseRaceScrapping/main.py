@@ -17,13 +17,20 @@ def pageTwo(pageTwourl, horse_name):
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     driver = webdriver.Chrome(options=chrome_options)  # options=chrome_options
-    driver.get(pageTwourl)
-    driver.implicitly_wait(3)
-    # content = driver.execute_script("return document.documentElement.outerHTML")
-    html = driver.page_source
-    soup = BeautifulSoup(html, "lxml")
-    # time.sleep(5)
-    table = soup.find('table', {'class': 'ui-table hp-formTable ui-table_type1 ui-table_sortable'})
+    for i in range(0,3):
+        driver.get(pageTwourl)
+        driver.implicitly_wait(3)
+        # content = driver.execute_script("return document.documentElement.outerHTML")
+        html = driver.page_source
+        soup = BeautifulSoup(html, "lxml")
+        # time.sleep(5)
+        table = soup.find('table', {'class': 'ui-table hp-formTable ui-table_type1 ui-table_sortable'})
+        if table != None:
+            print("page 2 done in:", i + 1)
+            break
+        else:
+            print("page 2 trying:",i+1)
+            continue
     page_two_dataList = []
     try:
         table_body = table.find('tbody', {'class': 'ui-table__body'})
@@ -131,15 +138,23 @@ def pageOne(pageurl):
     chrome_options.add_argument("--headless")
     driver = webdriver.Chrome(options=chrome_options)  # options=chrome_options
     try:
-        driver.get(pageurl)
-        driver.implicitly_wait(3)
+        for i in range(0,3):
+            driver.get(pageurl)
+            driver.implicitly_wait(3)
+            html = driver.page_source
+            # pageurl = rqst.urlopen(pageurl)
+            soup = BeautifulSoup(html, "lxml")
+            topright = soup.find('div', {'class': 'RC-courseHeader'})
+            if topright != None:
+                print("page 1 done in : ", i + 1)
+                break
+            else:
+                print("page 1 trying: ", i+1)
+                continue
     except WebDriverException:
         pass
     # content = driver.execute_script("return document.documentElement.outerHTML")  # rqst.urlopen(url)
-    html = driver.page_source
-    # pageurl = rqst.urlopen(pageurl)
-    soup = BeautifulSoup(html, "lxml")
-    topright = soup.find('div', {'class': 'RC-courseHeader'})
+
     try:
         time = re.sub(r"\s", "", topright.find('span', {'class': 'RC-courseHeader__time'}).get_text())
     except:
@@ -405,12 +420,19 @@ def pageThree(pageThreeurl, target_horse_name):
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     driver = webdriver.Chrome(options=chrome_options)  # options=chrome_options
-    driver.get(pageThreeurl)
-    driver.implicitly_wait(5)
-    content = driver.execute_script("return document.documentElement.outerHTML")
-    soup = BeautifulSoup(content, "html.parser")
-    try:
+    for i in range(0,3):
+        driver.get(pageThreeurl)
+        driver.implicitly_wait(5)
+        content = driver.execute_script("return document.documentElement.outerHTML")
+        soup = BeautifulSoup(content, "html.parser")
         main_row = soup.findAll('tr', {'class': 'rp-horseTable__mainRow'})
+        if main_row != None:
+            print("Page 3 done in:", i+1)
+            break
+        else:
+            print("Page 3 trying:", i + 1)
+            continue
+    try:
         i = 0
         target_comment = 0
         for row in main_row:
@@ -452,17 +474,23 @@ if __name__ == '__main__':
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     driver = webdriver.Chrome(options=chrome_options)  # options=chrome_options
-    driver.get(source + baseurl)
-    driver.implicitly_wait(5)
-    html = driver.page_source
-    # content = driver.execute_script("return document.documentElement.outerHTML")
-    soup = BeautifulSoup(html, "html.parser")
-    allSections = soup.findAll("section", {"class": "ui-accordion__row"})
+    while True:
+        driver.get(source + baseurl)
+        driver.implicitly_wait(5)
+        html = driver.page_source
+        # content = driver.execute_script("return document.documentElement.outerHTML")
+        soup = BeautifulSoup(html, "html.parser")
+        allSections = soup.findAll("section", {"class": "ui-accordion__row"})
+        if len(allSections) != 0:
+            break
+        else:
+            print("Loop")
+            continue
     # all = driver.find_elements_by_class_name("ui-accordion__row")
     print(len(allSections))
-    section1 = allSections[3]
-    races = section1.find("div", {"class": "RC-meetingList"}).findAll("div", {"class": "RC-meetingItem"})
-    page1 = source + races[1].find('a')['href']
+    # section1 = allSections[3]
+    # races = section1.find("div", {"class": "RC-meetingList"}).findAll("div", {"class": "RC-meetingItem"})
+    # page1 = source + races[1].find('a')['href']
     # print(pageOne(page1))
     racesurlList = []
     for section in allSections:
