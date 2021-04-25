@@ -144,8 +144,8 @@ def pageOne(pageurl):
             html = driver.page_source
             # pageurl = rqst.urlopen(pageurl)
             soup = BeautifulSoup(html, "lxml")
-            topright = soup.find('div', {'class': 'RC-courseHeader'})
-            if topright != None:
+            topleft = soup.find('div', {'class': 'RC-courseHeader'})
+            if topleft != None:
                 print("page 1 done in : ", i + 1)
                 break
             else:
@@ -156,37 +156,41 @@ def pageOne(pageurl):
     # content = driver.execute_script("return document.documentElement.outerHTML")  # rqst.urlopen(url)
 
     try:
-        time = re.sub(r"\s", "", topright.find('span', {'class': 'RC-courseHeader__time'}).get_text())
+        time = re.sub(r"\s", "", topleft.find('span', {'class': 'RC-courseHeader__time'}).get_text())
     except:
         time = "null"
     try:
         try:
-            data = topright.find('h1', {'class': 'ui-h1 RC-courseHeader__name'}).get_text(strip=True).split(" ",2)
+            data = topleft.find('h1', {'class': 'ui-h1 RC-courseHeader__name'}).get_text(strip=True).split(" ",2)
             meeting = re.sub(r"\s", "", data[0])
             surface = re.sub(r"\s", "", data[1])
             print(meeting, surface)
         except:
-            meeting = topright.find('h1', {'class': 'ui-h1 RC-courseHeader__name'}).get_text(strip=True)
+            meeting = topleft.find('h1', {'class': 'ui-h1 RC-courseHeader__name'}).get_text(strip=True)
             print(meeting)
     except:
         meeting = "null"
         print(meeting)
     try:
-        date = topright.find('span', {'class': 'RC-courseHeader__date'}).get_text(" ", strip=True)
+        date = topleft.find('span', {'class': 'RC-courseHeader__date'}).get_text(" ", strip=True)
     except:
         date = "null"
     try:
-        distance = re.sub(r"\s", "", topright.find('strong', {'class': 'RC-cardHeader__distance'}).get_text())
+        distance = re.sub(r"\s", "", topleft.find('strong', {'class': 'RC-cardHeader__distance'}).get_text())
     except:
         distance = "null"
     try:
-        Class = topright.find('span', {'data-test-selector': 'RC-header__raceClass'}).get_text(strip=True)
+        Class = topleft.find('span', {'data-test-selector': 'RC-header__raceClass'}).get_text(strip=True)
     except:
         Class = "null"
     try:
-        required_age = topright.find('span', {'data-test-selector': 'RC-header__rpAges'}).get_text(strip=True)
+        required_age = topleft.find('span', {'data-test-selector': 'RC-header__rpAges'}).get_text(strip=True)
     except:
         required_age = "null"
+    try:
+        surface = topleft.find('span', {'class': 'RC-courseHeader__surface hidden-sm-down'}).get_text(strip=True)
+    except:
+        surface = "null"
 
     table = soup.find('div', {'class': 'RC-runnerRowWrapper'})
     horsesData = []
@@ -251,6 +255,7 @@ def pageOne(pageurl):
                 'form': form,
                 'age': age,
                 'weight': weight,
+                'surface': surface,
                 'jokey': jokey,
                 'trainer': trainer,
                 'ts': ts,
@@ -490,7 +495,7 @@ if __name__ == '__main__':
     print(len(allSections))
     # section1 = allSections[3]
     # races = section1.find("div", {"class": "RC-meetingList"}).findAll("div", {"class": "RC-meetingItem"})
-    # page1 = source + races[1].find('a')['href']
+    # page1 = source + races[0].find('a')['href']
     # print(pageOne(page1))
     racesurlList = []
     for section in allSections:
