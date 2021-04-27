@@ -194,6 +194,7 @@ def pageOne(pageurl):
 
     table = soup.find('div', {'class': 'RC-runnerRowWrapper'})
     horsesData = []
+    print(1)
     try:
         all_table_datas = table.findAll('div', {'class': 'RC-runnerRow'})
         for data in all_table_datas:
@@ -213,6 +214,16 @@ def pageOne(pageurl):
                 horse_name = data.find('a', {'class': 'RC-runnerName'}).get_text(strip=True)
             except:
                 horse_name="null"
+            try:
+                abbreviations = data.find('div', {'class': 'RC-runnerStats'})
+                abbreviations = abbreviations.findAll('div', {'class': 'RC-runnerStats__cdbf'})
+                abbr=""
+                for abb in abbreviations:
+                    abbr += abb.get_text(strip=True)+" "
+                # print("abb: ",abbr)
+            except:
+                abbr="null"
+                print("abb: ",abbreviations)
             try:
                 horse_link = data.find('a', {'class': 'RC-runnerName'})['href']
             except:
@@ -246,10 +257,12 @@ def pageOne(pageurl):
                 rpr = data.find('span', {'class': 'RC-runnerRpr'}).get_text(strip=True)
             except:
                 rpr = "null"
-            #print(racecard_num, " ", draw, " ", form, " ", horse_name, " ", horse_link, " ", age, " ", weight, " ", jokey," ", trainer, " ", ts, " ", rpr)
+            print(racecard_num, " ", draw, " ", form, " ", horse_name, " ", horse_link, " ", age, " ", weight, " ", jokey," ", trainer, " ", ts, " ", rpr)
             pageTwoDataList = pageTwo(source + horse_link,horse_name)
+            #print(2)
             horse = {
                 'horse_name': horse_name,
+                'abbreviations': abbr,
                 'racecard_num': racecard_num,
                 'draw': draw,
                 'form': form,
@@ -463,7 +476,7 @@ def pageThree(pageThreeurl, target_horse_name):
             target_wining_time = "null"
         return keyword, target_wining_time
     except:
-        return "Null", "Null"
+        return "null", "null"
 
 
 # Press the green button in the gutter to run the script.
@@ -496,8 +509,9 @@ if __name__ == '__main__':
     # section1 = allSections[3]
     # races = section1.find("div", {"class": "RC-meetingList"}).findAll("div", {"class": "RC-meetingItem"})
     # page1 = source + races[0].find('a')['href']
-    # print(pageOne(page1))
+    # print(pageOne("https://www.racingpost.com/racecards/393/lingfield-aw/2021-04-26/781671/"))
     racesurlList = []
+    resultInJson = []
     for section in allSections:
         races = section.find("div", {"class": "RC-meetingList"}).findAll("div", {"class": "RC-meetingItem"})
         for race in races:
@@ -506,7 +520,8 @@ if __name__ == '__main__':
     for pg in racesurlList:
         tm = time.time()
         print(pg)
-        print(json.dumps(pageOne(pg)))
+        resultInJson.append(json.dumps(pageOne(pg)))
         print(time.time() - tm)
         print("\n")
+    print(resultInJson)
     print(time.time()-past)
