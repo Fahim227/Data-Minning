@@ -297,6 +297,153 @@ def pageOne(pageurl):
         }
         horsesData.append(horse)
         pass
+
+    try:
+        # stats = driver.find_element_by_class_name("RC-accordion__statsRow")
+        # stats_table = stats.find_elements_by_tag_name("tbody")
+        # print("Null")
+        # print(len(stats_table))
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")
+        driver2 = webdriver.Chrome(options=chrome_options)
+        for i in range(0,3):
+            driver2.get(pageurl)
+            driver2.implicitly_wait(5)
+            html2 = driver2.page_source
+            soup2 = BeautifulSoup(html2, "html.parser")
+            stats = soup2.find('section', {'data-accordion-row': 'stats'})
+            if stats != None:
+                print("Done")
+                break
+
+            else:
+                print("failed",i+1)
+                continue
+        try:
+            stats_table = stats.findAll('tbody', {'class': 'RC-stats__tableBody'})
+        except:
+            stats_table = []
+        print(len(stats_table))
+        print("Stats Details:..........")
+        try:
+            stats_data_list = stats_table[0].findAll('tr', {'class': 'ui-table__row'})
+        except:
+            stats_data_list = []
+        for stat in stats_data_list:
+            try:
+                trainer_name = stat.find('td', {'class': 'RC-stats__nameColumn'}).get_text(strip=True)
+            except:
+                trainer_name = "null"
+            try:
+                winning = re.sub(r"\s", "",
+                             stat.find('td', {'data-test-selector': 'RC-lastWinsRuns__row'}).get_text(strip=True))
+            except:
+                winning = "null"
+            try:
+                last_percent = re.sub(r"\s", "",
+                                  stat.find('td', {'data-test-selector': 'RC-lastPercent__row'}).get_text(strip=True))
+            except:
+                last_percent = "null"
+            try:
+                overAll_winning = re.sub(r"\s", "",
+                                     stat.find('td', {'data-test-selector': 'RC-overallWinsRuns__row'}).get_text(
+                                         strip=True))
+            except:
+                overAll_winning = "null"
+            try:
+                overAll_percent = re.sub(r"\s", "",
+                                     stat.find('td', {'data-test-selector': 'RC-overallPercent__row'}).get_text(
+                                         strip=True))
+            except:
+                overAll_percent = "null"
+            # print(trainer_name, " ", winning, " ", last_percent, " ", overAll_winning, " ", overAll_percent)
+            trainer_stats = {
+                "trainer_name": trainer,
+                "winning": winning,
+                "last_percent": last_percent,
+                "overAll_winning": overAll_winning,
+                "overAll_parcent": overAll_percent
+            }
+        print("Jokey Details:..........")
+        jokey_data_list = stats_table[1].findAll('tr', {'class': 'ui-table__row'})
+        for jokey in jokey_data_list:
+            try:
+                jokey_name = jokey.find('td', {'class': 'RC-stats__nameColumn'}).get_text(strip=True)
+            except:
+                jokey_name = "null"
+            try:
+                winning = re.sub(r"\s", "",
+                             jokey.find('td', {'data-test-selector': 'RC-lastWinsRuns__row'}).get_text(strip=True))
+            except:
+                winning = "null"
+            try:
+                last_percent = re.sub(r"\s", "",
+                                  jokey.find('td', {'data-test-selector': 'RC-lastPercent__row'}).get_text(strip=True))
+            except:
+                last_percent = "null"
+            try:
+                overAll_winning = re.sub(r"\s", "",
+                                     jokey.find('td', {'data-test-selector': 'RC-overallWinsRuns__row'}).get_text(
+                                         strip=True))
+            except:
+                overAll_winning = "null"
+            try:
+                overAll_percent = re.sub(r"\s", "",
+                                     jokey.find('td', {'data-test-selector': 'RC-overallPercent__row'}).get_text(
+                                         strip=True))
+            except:
+                overAll_percent = "null"
+            # print(jokey_name, " ", winning, " ", last_percent, " ", overAll_winning, " ", overAll_percent)
+            jokey_stats = {
+                "jokey_name": jokey_name,
+                "winning": winning,
+                "last_percent": last_percent,
+                "overAll_winning": overAll_winning,
+                "overAll_parcent": overAll_percent
+            }
+        print("Horse Details:..........")
+        horse_data_list = stats_table[2].findAll('tr', {'class': 'ui-table__row'})
+        for horse in horse_data_list:
+            try:
+                horse_name = horse.find('td', {'class': 'RC-stats__horseNameColumn'}).get_text(strip=True)
+            except:
+                horse_name = "null"
+            try:
+                going_wins = re.sub(r"\s", "",
+                                horse.find('td', {'data-test-selector': 'RC-goingWinsRuns__row'}).get_text(strip=True))
+            except:
+                going_wins = "null"
+            try:
+                going_percent = re.sub(r"\s", "",
+                                   horse.find('td', {'data-test-selector': 'RC-goingPercent__row'}).get_text(
+                                       strip=True))
+            except:
+                going_percent = "null"
+
+            try:
+                distance_winning = re.sub(r"\s", "",
+                                      horse.find('td', {'data-test-selector': 'RC-distanceWinsRuns__row'}).get_text(
+                                          strip=True))
+            except:
+                distance_winning = "null"
+            try:
+                course_percent = re.sub(r"\s", "",
+                                    horse.find('td', {'data-test-selector': 'RC-coursePercent__row'}).get_text(
+                                        strip=True))
+            except:
+                course_percent = "null"
+            # print(horse_name, " ", going_wins, " ", going_percent, " ", distance_winning, " ", course_percent)
+            horse_stats = {
+                "horse_name": horse_name,
+                "going_wins": going_wins,
+                "going_parcent": going_percent,
+                "distance_winning": distance_winning,
+                "course_percent": course_percent
+            }
+    except:
+        print("Really Null")
+        pass
     event = {
         'time': time,
         'meeting': meeting,
@@ -304,133 +451,12 @@ def pageOne(pageurl):
         'distance': distance,
         'class': Class,
         'required_age': required_age,
-        'horses': horsesData
+        'horses': horsesData,
+        'trainer_stats': trainer_stats,
+        'jokey_stats': jokey_stats,
+        'horse_stats': horse_stats
     }
     return event
-
-
-"""    try:
-        # stats = driver.find_element_by_class_name("RC-accordion__statsRow")
-        # stats_table = stats.find_elements_by_tag_name("tbody")
-        # print("Null")
-        # print(len(stats_table))
-        stats = soup.find('section', {'data-accordion-row': 'stats'})
-        stats_table = stats.findAll('tbody', {'class': 'RC-stats__tableBody'})
-        print(len(stats_table))
-        print("Stats Details:..........")
-        stats_data_list = stats_table[0].findAll('tr', {'class': 'ui-table__row'})
-        for stat in stats_data_list:
-            tariner_name = stat.find('td', {'class': 'RC-stats__nameColumn'}).get_text(strip=True)
-            winning = re.sub(r"\s", "",
-                             stat.find('td', {'data-test-selector': 'RC-lastWinsRuns__row'}).get_text(strip=True))
-            last_percent = re.sub(r"\s", "",
-                                  stat.find('td', {'data-test-selector': 'RC-lastPercent__row'}).get_text(strip=True))
-            overAll_winning = re.sub(r"\s", "",
-                                     stat.find('td', {'data-test-selector': 'RC-overallWinsRuns__row'}).get_text(
-                                         strip=True))
-            overAll_percent = re.sub(r"\s", "",
-                                     stat.find('td', {'data-test-selector': 'RC-overallPercent__row'}).get_text(
-                                         strip=True))
-            print(tariner_name, " ", winning, " ", last_percent, " ", overAll_winning, " ", overAll_percent)
-        print("Jokey Details:..........")
-        jokey_data_list = stats_table[1].findAll('tr', {'class': 'ui-table__row'})
-        for jokey in jokey_data_list:
-            jokey_name = jokey.find('td', {'class': 'RC-stats__nameColumn'}).get_text(strip=True)
-            winning = re.sub(r"\s", "",
-                             jokey.find('td', {'data-test-selector': 'RC-lastWinsRuns__row'}).get_text(strip=True))
-            last_percent = re.sub(r"\s", "",
-                                  jokey.find('td', {'data-test-selector': 'RC-lastPercent__row'}).get_text(strip=True))
-            overAll_winning = re.sub(r"\s", "",
-                                     jokey.find('td', {'data-test-selector': 'RC-overallWinsRuns__row'}).get_text(
-                                         strip=True))
-            overAll_percent = re.sub(r"\s", "",
-                                     jokey.find('td', {'data-test-selector': 'RC-overallPercent__row'}).get_text(
-                                         strip=True))
-            print(jokey_name, " ", winning, " ", last_percent, " ", overAll_winning, " ", overAll_percent)
-        print("Horse Details:..........")
-        horse_data_list = stats_table[2].findAll('tr', {'class': 'ui-table__row'})
-        for horse in horse_data_list:
-            horse_name = horse.find('td', {'class': 'RC-stats__horseNameColumn'}).get_text(strip=True)
-            going_wins = re.sub(r"\s", "",
-                                horse.find('td', {'data-test-selector': 'RC-goingWinsRuns__row'}).get_text(strip=True))
-            going_percent = re.sub(r"\s", "",
-                                   horse.find('td', {'data-test-selector': 'RC-goingPercent__row'}).get_text(
-                                       strip=True))
-            distance_winning = re.sub(r"\s", "",
-                                      horse.find('td', {'data-test-selector': 'RC-distanceWinsRuns__row'}).get_text(
-                                          strip=True))
-            course_percent = re.sub(r"\s", "",
-                                    horse.find('td', {'data-test-selector': 'RC-coursePercent__row'}).get_text(
-                                        strip=True))
-            print(horse_name, " ", going_wins, " ", going_percent, " ", distance_winning, " ", course_percent)
-    except:
-
-        try:
-            print("Try again Null")
-            chrome_options = Options()
-            chrome_options.add_argument("--headless")
-            driver2 = webdriver.Chrome(options=chrome_options)
-            driver2.get(pageurl)
-            content = driver2.execute_script("return document.documentElement.outerHTML")  # rqst.urlopen(url)
-            # pageurl = rqst.urlopen(pageurl)
-            soup2 = BeautifulSoup(content, "lxml")
-            stats2 = soup2.find('section', {'data-accordion-row': 'stats'})
-            # print(stats2)
-            stats_table = stats2.findAll('tbody', {'class': 'RC-stats__tableBody'})
-            print(len(stats_table))
-            print("Stats Details:..........")
-            stats_data_list = stats_table[0].findAll('tr', {'class': 'ui-table__row'})
-            for stat in stats_data_list:
-                tariner_name = stat.find('td', {'class': 'RC-stats__nameColumn'}).get_text(strip=True)
-                winning = re.sub(r"\s", "",
-                                 stat.find('td', {'data-test-selector': 'RC-lastWinsRuns__row'}).get_text(strip=True))
-                last_percent = re.sub(r"\s", "",
-                                      stat.find('td', {'data-test-selector': 'RC-lastPercent__row'}).get_text(
-                                          strip=True))
-                overAll_winning = re.sub(r"\s", "",
-                                         stat.find('td', {'data-test-selector': 'RC-overallWinsRuns__row'}).get_text(
-                                             strip=True))
-                overAll_percent = re.sub(r"\s", "",
-                                         stat.find('td', {'data-test-selector': 'RC-overallPercent__row'}).get_text(
-                                             strip=True))
-                print(tariner_name, " ", winning, " ", last_percent, " ", overAll_winning, " ", overAll_percent)
-            print("Jokey Details:..........")
-            jokey_data_list = stats_table[1].findAll('tr', {'class': 'ui-table__row'})
-            for jokey in jokey_data_list:
-                jokey_name = jokey.find('td', {'class': 'RC-stats__nameColumn'}).get_text(strip=True)
-                winning = re.sub(r"\s", "",
-                                 jokey.find('td', {'data-test-selector': 'RC-lastWinsRuns__row'}).get_text(strip=True))
-                last_percent = re.sub(r"\s", "",
-                                      jokey.find('td', {'data-test-selector': 'RC-lastPercent__row'}).get_text(
-                                          strip=True))
-                overAll_winning = re.sub(r"\s", "",
-                                         jokey.find('td', {'data-test-selector': 'RC-overallWinsRuns__row'}).get_text(
-                                             strip=True))
-                overAll_percent = re.sub(r"\s", "",
-                                         jokey.find('td', {'data-test-selector': 'RC-overallPercent__row'}).get_text(
-                                             strip=True))
-                print(jokey_name, " ", winning, " ", last_percent, " ", overAll_winning, " ", overAll_percent)
-            print("Horse Details:..........")
-            horse_data_list = stats_table[2].findAll('tr', {'class': 'ui-table__row'})
-            for horse in horse_data_list:
-                horse_name = horse.find('td', {'class': 'RC-stats__horseNameColumn'}).get_text(strip=True)
-                going_wins = re.sub(r"\s", "",
-                                    horse.find('td', {'data-test-selector': 'RC-goingWinsRuns__row'}).get_text(
-                                        strip=True))
-                going_percent = re.sub(r"\s", "",
-                                       horse.find('td', {'data-test-selector': 'RC-goingPercent__row'}).get_text(
-                                           strip=True))
-                distance_winning = re.sub(r"\s", "",
-                                          horse.find('td', {'data-test-selector': 'RC-distanceWinsRuns__row'}).get_text(
-                                              strip=True))
-                course_percent = re.sub(r"\s", "",
-                                        horse.find('td', {'data-test-selector': 'RC-coursePercent__row'}).get_text(
-                                            strip=True))
-                print(horse_name, " ", going_wins, " ", going_percent, " ", distance_winning, " ", course_percent)
-        except:
-            print("Really Null")
-            pass
-        """
 
 
 def pageThree(pageThreeurl, target_horse_name):
@@ -508,8 +534,8 @@ if __name__ == '__main__':
     print(len(allSections))
     # section1 = allSections[3]
     # races = section1.find("div", {"class": "RC-meetingList"}).findAll("div", {"class": "RC-meetingItem"})
-    # page1 = source + races[0].find('a')['href']
-    # print(pageOne("https://www.racingpost.com/racecards/393/lingfield-aw/2021-04-26/781671/"))
+    # page1 = source + races[3].find('a')['href']
+    # print(pageOne(page1))
     racesurlList = []
     resultInJson = []
     for section in allSections:
