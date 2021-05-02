@@ -2,12 +2,15 @@ from bs4 import BeautifulSoup
 from urllib import request as rqst
 import re
 import pandas as pd
+import concurrent.futures
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import time, json
 from selenium.common.exceptions import WebDriverException
 
 source = "https://www.racingpost.com"
+driverlink = "C:/Users/user/Downloads/chromedriver_win32/chromedriver.exe"
+MAX_THREADS = 30
 
 
 def pageTwo(pageTwourl, horse_name):
@@ -17,7 +20,8 @@ def pageTwo(pageTwourl, horse_name):
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     driver = webdriver.Chrome(options=chrome_options)  # options=chrome_options
-    for i in range(0,3):
+    i=0
+    while True:
         driver.get(pageTwourl)
         driver.implicitly_wait(3)
         # content = driver.execute_script("return document.documentElement.outerHTML")
@@ -29,7 +33,8 @@ def pageTwo(pageTwourl, horse_name):
             print("page 2 done in:", i + 1)
             break
         else:
-            print("page 2 trying:",i+1)
+            i += 1
+            print("page 2 trying:", i + 1)
             continue
     page_two_dataList = []
     try:
@@ -44,7 +49,7 @@ def pageTwo(pageTwourl, horse_name):
                 except:
                     pass
                 try:
-                 date_link = data.find('a', {'class': "ui-link ui-link_table js-popupLink"})['href']
+                    date_link = data.find('a', {'class': "ui-link ui-link_table js-popupLink"})['href']
                 except:
                     pass
                 keyword, winning_time = pageThree(source + date_link, horse_name)
@@ -72,7 +77,7 @@ def pageTwo(pageTwourl, horse_name):
                     total_horses = table_cell[5]
                     total_horses.strong.decompose()
                     total_horses.a.decompose()
-                    total_horses = total_horses.get_text(strip=True).replace('/',"")
+                    total_horses = total_horses.get_text(strip=True).replace('/', "")
                     SP = table_cell[6].get_text(strip=True)
                     jokey = table_cell[7].find('a').get_text(strip=True)
                 except:
@@ -132,13 +137,61 @@ def pageTwo(pageTwourl, horse_name):
     print(time.time() - tm)
 
 
+def pageThree(pageThreeurl, target_horse_name):
+    print(pageThreeurl)
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    driver = webdriver.Chrome(driverlink, options=chrome_options)  # options=chrome_options
+    for i in range(0, 3):
+        driver.get(pageThreeurl)
+        driver.implicitly_wait(5)
+        content = driver.execute_script("return document.documentElement.outerHTML")
+        soup = BeautifulSoup(content, "html.parser")
+        main_row = soup.findAll('tr', {'class': 'rp-horseTable__mainRow'})
+        if main_row != None:
+            print("Page 3 done in:", i + 1)
+            break
+        else:
+            print("Page 3 trying:", i + 1)
+            continue
+    try:
+        i = 0
+        target_comment = 0
+        for row in main_row:
+            horse_name = row.find('td', {'class': 'rp-horseTable__horseCell'}).find('div',
+                                                                                    {
+                                                                                        'class': 'rp-horseTable__info'}).find(
+                'a', {'class': 'rp-horseTable__horse__name'}).get_text(strip=True)
+            if horse_name.lower() == target_horse_name.lower():
+                target_comment = i
+            i += 1
+        # print(target_comment)
+        try:
+            keywords = soup.find('tbody').findAll('tr', {'class': 'rp-horseTable__commentRow'})
+            keyword = re.sub(r"\s", "", keywords[target_comment].get_text(strip=True))
+        except:
+            keyword = "null"
+
+        try:
+            target_wining_time = re.sub(r"\s", "",
+                                        soup.find('div', {'class': 'rp-raceInfo'}).findAll('li')[0].findAll('span', {
+                                            'class': 'rp-raceInfo__value'})[2].get_text(strip=True))
+        except:
+            target_wining_time = "null"
+        return keyword, target_wining_time
+    except:
+        return "null", "null"
+
+
 def pageOne(pageurl):
     chrome_options = Options()
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--headless")
     driver = webdriver.Chrome(options=chrome_options)  # options=chrome_options
     try:
-        for i in range(0,3):
+        i = 0
+        while True:
+            print("running", i)
             driver.get(pageurl)
             driver.implicitly_wait(3)
             html = driver.page_source
@@ -146,10 +199,12 @@ def pageOne(pageurl):
             soup = BeautifulSoup(html, "lxml")
             topleft = soup.find('div', {'class': 'RC-courseHeader'})
             if topleft != None:
-                print("page 1 done in : ", i + 1)
+                # print("page 1 done in : ", i + 1)
+                i += 1
                 break
             else:
-                print("page 1 trying: ", i+1)
+                i += 1
+                # print("page 1 trying: ", i+1)
                 continue
     except WebDriverException:
         pass
@@ -161,7 +216,7 @@ def pageOne(pageurl):
         time = "null"
     try:
         try:
-            data = topleft.find('h1', {'class': 'ui-h1 RC-courseHeader__name'}).get_text(strip=True).split(" ",2)
+            data = topleft.find('h1', {'class': 'ui-h1 RC-courseHeader__name'}).get_text(strip=True).split(" ", 2)
             meeting = re.sub(r"\s", "", data[0])
             surface = re.sub(r"\s", "", data[1])
             print(meeting, surface)
@@ -192,6 +247,7 @@ def pageOne(pageurl):
     except:
         surface = "null"
 
+    print("")
     table = soup.find('div', {'class': 'RC-runnerRowWrapper'})
     horsesData = []
     print(1)
@@ -199,7 +255,8 @@ def pageOne(pageurl):
         all_table_datas = table.findAll('div', {'class': 'RC-runnerRow'})
         for data in all_table_datas:
             try:
-                racecard_num = data.find('span', {'data-test-selector': 'RC-cardPage-runnerNumber-no'}).get_text(strip=True)
+                racecard_num = data.find('span', {'data-test-selector': 'RC-cardPage-runnerNumber-no'}).get_text(
+                    strip=True)
             except:
                 racecard_num = "null"
             try:
@@ -213,23 +270,24 @@ def pageOne(pageurl):
             try:
                 horse_name = data.find('a', {'class': 'RC-runnerName'}).get_text(strip=True)
             except:
-                horse_name="null"
+                horse_name = "null"
             try:
                 abbreviations = data.find('div', {'class': 'RC-runnerStats'})
                 abbreviations = abbreviations.findAll('div', {'class': 'RC-runnerStats__cdbf'})
-                abbr=""
+                abbr = ""
                 for abb in abbreviations:
-                    abbr += abb.get_text(strip=True)+" "
+                    abbr += abb.get_text(strip=True) + " "
                 # print("abb: ",abbr)
             except:
-                abbr="null"
-                print("abb: ",abbreviations)
+                abbr = "null"
+                print("abb: ", abbreviations)
             try:
                 horse_link = data.find('a', {'class': 'RC-runnerName'})['href']
             except:
                 horse_link = "null"
             try:
-                last_run = data.find('div', {'data-test-selector': 'RC-cardPage-runnerStats-lastRun'}).get_text(strip=True)
+                last_run = data.find('div', {'data-test-selector': 'RC-cardPage-runnerStats-lastRun'}).get_text(
+                    strip=True)
             except:
                 last_run = "null"
             try:
@@ -257,9 +315,9 @@ def pageOne(pageurl):
                 rpr = data.find('span', {'class': 'RC-runnerRpr'}).get_text(strip=True)
             except:
                 rpr = "null"
-            print(racecard_num, " ", draw, " ", form, " ", horse_name, " ", horse_link, " ", age, " ", weight, " ", jokey," ", trainer, " ", ts, " ", rpr)
-            pageTwoDataList = pageTwo(source + horse_link,horse_name)
-            #print(2)
+            # print(racecard_num, " ", draw, " ", form, " ", horse_name, " ", horse_link, " ", age, " ", weight, " ",jokey, " ", trainer, " ", ts, " ", rpr)
+            # pageTwoDataList = pageTwo(source + horse_link,horse_name)
+            # print(2)
             horse = {
                 'horse_name': horse_name,
                 'abbreviations': abbr,
@@ -275,8 +333,9 @@ def pageOne(pageurl):
                 'rpr': rpr,
                 'last_run': last_run,
                 'racecard_num': racecard_num,
-                'pagetwodatalist': pageTwoDataList
+                # 'pagetwodatalist': pageTwoDataList
             }
+            print(json.dumps(horse))
             horsesData.append(horse)
     except:
         print("Table Error")
@@ -298,6 +357,9 @@ def pageOne(pageurl):
         horsesData.append(horse)
         pass
 
+    trainer_stats = {}
+    jokey_stats = {}
+    horse_stats = {}
     try:
         # stats = driver.find_element_by_class_name("RC-accordion__statsRow")
         # stats_table = stats.find_elements_by_tag_name("tbody")
@@ -307,17 +369,19 @@ def pageOne(pageurl):
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--no-sandbox")
         driver2 = webdriver.Chrome(options=chrome_options)
-        for i in range(0,3):
+        i=0
+        while True:
             driver2.get(pageurl)
             driver2.implicitly_wait(5)
             html2 = driver2.page_source
             soup2 = BeautifulSoup(html2, "html.parser")
             stats = soup2.find('section', {'data-accordion-row': 'stats'})
             if stats != None:
-                print("Done")
+                print("Done in: ", i+1)
                 break
 
             else:
+                i += 1
                 print("failed",i+1)
                 continue
         try:
@@ -365,6 +429,7 @@ def pageOne(pageurl):
                 "overAll_winning": overAll_winning,
                 "overAll_parcent": overAll_percent
             }
+            print(json.dumps(trainer_stats))
         print("Jokey Details:..........")
         jokey_data_list = stats_table[1].findAll('tr', {'class': 'ui-table__row'})
         for jokey in jokey_data_list:
@@ -402,6 +467,7 @@ def pageOne(pageurl):
                 "overAll_winning": overAll_winning,
                 "overAll_parcent": overAll_percent
             }
+            print(json.dumps(jokey_stats))
         print("Horse Details:..........")
         horse_data_list = stats_table[2].findAll('tr', {'class': 'ui-table__row'})
         for horse in horse_data_list:
@@ -441,6 +507,7 @@ def pageOne(pageurl):
                 "distance_winning": distance_winning,
                 "course_percent": course_percent
             }
+            print(json.dumps(horse_stats))
     except:
         print("Really Null")
         pass
@@ -456,53 +523,13 @@ def pageOne(pageurl):
         'jokey_stats': jokey_stats,
         'horse_stats': horse_stats
     }
-    return event
-
-
-def pageThree(pageThreeurl, target_horse_name):
-    print(pageThreeurl)
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    driver = webdriver.Chrome(options=chrome_options)  # options=chrome_options
-    for i in range(0,3):
-        driver.get(pageThreeurl)
-        driver.implicitly_wait(5)
-        content = driver.execute_script("return document.documentElement.outerHTML")
-        soup = BeautifulSoup(content, "html.parser")
-        main_row = soup.findAll('tr', {'class': 'rp-horseTable__mainRow'})
-        if main_row != None:
-            print("Page 3 done in:", i+1)
-            break
-        else:
-            print("Page 3 trying:", i + 1)
-            continue
-    try:
-        i = 0
-        target_comment = 0
-        for row in main_row:
-            horse_name = row.find('td', {'class': 'rp-horseTable__horseCell'}).find('div',
-                                                                                    {
-                                                                                        'class': 'rp-horseTable__info'}).find(
-                'a', {'class': 'rp-horseTable__horse__name'}).get_text(strip=True)
-            if horse_name.lower() == target_horse_name.lower():
-                target_comment = i
-            i += 1
-        # print(target_comment)
-        try:
-            keywords = soup.find('tbody').findAll('tr', {'class': 'rp-horseTable__commentRow'})
-            keyword = re.sub(r"\s", "", keywords[target_comment].get_text(strip=True))
-        except:
-            keyword = "null"
-
-        try:
-            target_wining_time = re.sub(r"\s", "",
-                                        soup.find('div', {'class': 'rp-raceInfo'}).findAll('li')[0].findAll('span', {
-                                            'class': 'rp-raceInfo__value'})[2].get_text(strip=True))
-        except:
-            target_wining_time = "null"
-        return keyword, target_wining_time
-    except:
-        return "null", "null"
+    with open('jfile.json', 'a') as outfile:
+        data = json.load(outfile)
+        data.update(event)
+        outfile.seek(0)
+        json.dump(data, outfile)
+    time.sleep(3)
+    # return event
 
 
 # Press the green button in the gutter to run the script.
@@ -535,6 +562,7 @@ if __name__ == '__main__':
     # section1 = allSections[3]
     # races = section1.find("div", {"class": "RC-meetingList"}).findAll("div", {"class": "RC-meetingItem"})
     # page1 = source + races[3].find('a')['href']
+    # print(page1)
     # print(pageOne(page1))
     racesurlList = []
     resultInJson = []
@@ -543,11 +571,21 @@ if __name__ == '__main__':
         for race in races:
             page = source + race.find('a')['href']
             racesurlList.append(page)
-    for pg in racesurlList:
+
+    # all urls in resulturlList
+    print(len(racesurlList))
+    threads = min(MAX_THREADS, len(racesurlList))
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as executor:
+        executor.map(pageOne, racesurlList)
+
+    """for pg in racesurlList:
         tm = time.time()
         print(pg)
         resultInJson.append(json.dumps(pageOne(pg)))
         print(time.time() - tm)
         print("\n")
-    print(resultInJson)
-    print(time.time()-past)
+    # print(resultInJson)
+    with open('jfile.json', 'a') as outfile:
+        json.dump(resultInJson, outfile)"""
+    print(time.time() - past)
