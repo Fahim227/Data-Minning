@@ -20,8 +20,8 @@ def pageTwo(pageTwourl, horse_name):
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     driver = webdriver.Chrome(options=chrome_options)  # options=chrome_options
-    i = 0
-    while True:
+
+    for i in range(0,100):
         driver.get(pageTwourl)
         driver.implicitly_wait(3)
         # content = driver.execute_script("return document.documentElement.outerHTML")
@@ -142,8 +142,8 @@ def pageThree(pageThreeurl, target_horse_name):
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     driver = webdriver.Chrome(driverlink, options=chrome_options)  # options=chrome_options
-    i = 0
-    while True:
+
+    for i in range(0,100):
         driver.get(pageThreeurl)
         driver.implicitly_wait(5)
         content = driver.execute_script("return document.documentElement.outerHTML")
@@ -320,7 +320,7 @@ def pageOne(pageurl):
             except:
                 rpr = "null"
             # print(racecard_num, " ", draw, " ", form, " ", horse_name, " ", horse_link, " ", age, " ", weight, " ",jokey, " ", trainer, " ", ts, " ", rpr)
-            # pageTwoDataList = pageTwo(source + horse_link, horse_name)
+            pageTwoDataList = pageTwo(source + horse_link, horse_name)
             # print(2)
             horse = {
                 'horse_name': horse_name,
@@ -337,7 +337,7 @@ def pageOne(pageurl):
                 'rpr': rpr,
                 'last_run': last_run,
                 'racecard_num': racecard_num,
-                # 'pagetwodatalist': pageTwoDataList
+                'pagetwodatalist': pageTwoDataList
             }
             print(json.dumps(horse))
             horsesData.append(horse)
@@ -363,7 +363,7 @@ def pageOne(pageurl):
     trainer_stats = []
     jokey_stats = []
     horse_stats = []
-    """try:
+    try:
         # stats = driver.find_element_by_class_name("RC-accordion__statsRow")
         # stats_table = stats.find_elements_by_tag_name("tbody")
         # print("Null")
@@ -519,7 +519,7 @@ def pageOne(pageurl):
             print(json.dumps(horse))
     except:
         print("Really Null")
-        pass"""
+        pass
     event = {
         'time': time,
         'meeting': meeting,
@@ -547,9 +547,8 @@ def pageOne(pageurl):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    data = json.load(open('data.json'))
-    print(len(data))
-    """past = time.time()
+
+    past = time.time()
     baseurl = "/racecards/"
     # page3 = "/results/46/pontefract/2021-04-19/780397"
     # target_horse = "Smullen"
@@ -592,7 +591,7 @@ if __name__ == '__main__':
     threads = min(MAX_THREADS, len(racesurlList))
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as executor:
-        executor.map(pageOne, racesurlList)"""
+        executor.map(pageOne, racesurlList)
 
     """for pg in racesurlList:
         tm = time.time()
@@ -603,6 +602,10 @@ if __name__ == '__main__':
     # print(resultInJson)
     with open('jfile.json', 'a') as outfile:
         json.dump(resultInJson, outfile)"""
-    """with open('data.json', 'a') as outfile:
+    with open('realAllData.json', 'a') as outfile:
         json.dump(eventj, outfile)
-    print(time.time() - past)"""
+    """data = json.load(open('data.json'))
+    print(data[1])
+    with open('realAllData.json', 'a') as outfile:
+        json.dump(data[1], outfile)"""
+    print(time.time() - past)
