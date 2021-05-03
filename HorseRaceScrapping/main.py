@@ -11,7 +11,7 @@ from selenium.common.exceptions import WebDriverException
 source = "https://www.racingpost.com"
 driverlink = "C:/Users/user/Downloads/chromedriver_win32/chromedriver.exe"
 MAX_THREADS = 30
-
+eventj = []
 
 def pageTwo(pageTwourl, horse_name):
     tm = time.time()
@@ -20,7 +20,7 @@ def pageTwo(pageTwourl, horse_name):
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     driver = webdriver.Chrome(options=chrome_options)  # options=chrome_options
-    i=0
+    i = 0
     while True:
         driver.get(pageTwourl)
         driver.implicitly_wait(3)
@@ -142,17 +142,20 @@ def pageThree(pageThreeurl, target_horse_name):
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     driver = webdriver.Chrome(driverlink, options=chrome_options)  # options=chrome_options
-    for i in range(0, 3):
+    i = 0
+    while True:
         driver.get(pageThreeurl)
         driver.implicitly_wait(5)
         content = driver.execute_script("return document.documentElement.outerHTML")
         soup = BeautifulSoup(content, "html.parser")
         main_row = soup.findAll('tr', {'class': 'rp-horseTable__mainRow'})
         if main_row != None:
+            i += 1
             print("Page 3 done in:", i + 1)
             break
         else:
             print("Page 3 trying:", i + 1)
+            i += 1
             continue
     try:
         i = 0
@@ -181,6 +184,7 @@ def pageThree(pageThreeurl, target_horse_name):
         return keyword, target_wining_time
     except:
         return "null", "null"
+    time.sleep(2)
 
 
 def pageOne(pageurl):
@@ -316,7 +320,7 @@ def pageOne(pageurl):
             except:
                 rpr = "null"
             # print(racecard_num, " ", draw, " ", form, " ", horse_name, " ", horse_link, " ", age, " ", weight, " ",jokey, " ", trainer, " ", ts, " ", rpr)
-            # pageTwoDataList = pageTwo(source + horse_link,horse_name)
+            # pageTwoDataList = pageTwo(source + horse_link, horse_name)
             # print(2)
             horse = {
                 'horse_name': horse_name,
@@ -356,11 +360,10 @@ def pageOne(pageurl):
         }
         horsesData.append(horse)
         pass
-
-    trainer_stats = {}
-    jokey_stats = {}
-    horse_stats = {}
-    try:
+    trainer_stats = []
+    jokey_stats = []
+    horse_stats = []
+    """try:
         # stats = driver.find_element_by_class_name("RC-accordion__statsRow")
         # stats_table = stats.find_elements_by_tag_name("tbody")
         # print("Null")
@@ -369,20 +372,20 @@ def pageOne(pageurl):
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--no-sandbox")
         driver2 = webdriver.Chrome(options=chrome_options)
-        i=0
-        while True:
+
+        for i in range(0,100):
             driver2.get(pageurl)
             driver2.implicitly_wait(5)
             html2 = driver2.page_source
             soup2 = BeautifulSoup(html2, "html.parser")
             stats = soup2.find('section', {'data-accordion-row': 'stats'})
             if stats != None:
-                print("Done in: ", i+1)
+                print("Done in: ", i + 1)
                 break
 
             else:
                 i += 1
-                print("failed",i+1)
+                print("failed", i + 1)
                 continue
         try:
             stats_table = stats.findAll('tbody', {'class': 'RC-stats__tableBody'})
@@ -401,35 +404,37 @@ def pageOne(pageurl):
                 trainer_name = "null"
             try:
                 winning = re.sub(r"\s", "",
-                             stat.find('td', {'data-test-selector': 'RC-lastWinsRuns__row'}).get_text(strip=True))
+                                 stat.find('td', {'data-test-selector': 'RC-lastWinsRuns__row'}).get_text(strip=True))
             except:
                 winning = "null"
             try:
                 last_percent = re.sub(r"\s", "",
-                                  stat.find('td', {'data-test-selector': 'RC-lastPercent__row'}).get_text(strip=True))
+                                      stat.find('td', {'data-test-selector': 'RC-lastPercent__row'}).get_text(
+                                          strip=True))
             except:
                 last_percent = "null"
             try:
                 overAll_winning = re.sub(r"\s", "",
-                                     stat.find('td', {'data-test-selector': 'RC-overallWinsRuns__row'}).get_text(
-                                         strip=True))
+                                         stat.find('td', {'data-test-selector': 'RC-overallWinsRuns__row'}).get_text(
+                                             strip=True))
             except:
                 overAll_winning = "null"
             try:
                 overAll_percent = re.sub(r"\s", "",
-                                     stat.find('td', {'data-test-selector': 'RC-overallPercent__row'}).get_text(
-                                         strip=True))
+                                         stat.find('td', {'data-test-selector': 'RC-overallPercent__row'}).get_text(
+                                             strip=True))
             except:
                 overAll_percent = "null"
             # print(trainer_name, " ", winning, " ", last_percent, " ", overAll_winning, " ", overAll_percent)
-            trainer_stats = {
-                "trainer_name": trainer,
+            trainer = {
+                "trainer_name": trainer_name,
                 "winning": winning,
                 "last_percent": last_percent,
                 "overAll_winning": overAll_winning,
                 "overAll_parcent": overAll_percent
             }
-            print(json.dumps(trainer_stats))
+            trainer_stats.append(trainer)
+            print(json.dumps(trainer))
         print("Jokey Details:..........")
         jokey_data_list = stats_table[1].findAll('tr', {'class': 'ui-table__row'})
         for jokey in jokey_data_list:
@@ -439,35 +444,37 @@ def pageOne(pageurl):
                 jokey_name = "null"
             try:
                 winning = re.sub(r"\s", "",
-                             jokey.find('td', {'data-test-selector': 'RC-lastWinsRuns__row'}).get_text(strip=True))
+                                 jokey.find('td', {'data-test-selector': 'RC-lastWinsRuns__row'}).get_text(strip=True))
             except:
                 winning = "null"
             try:
                 last_percent = re.sub(r"\s", "",
-                                  jokey.find('td', {'data-test-selector': 'RC-lastPercent__row'}).get_text(strip=True))
+                                      jokey.find('td', {'data-test-selector': 'RC-lastPercent__row'}).get_text(
+                                          strip=True))
             except:
                 last_percent = "null"
             try:
                 overAll_winning = re.sub(r"\s", "",
-                                     jokey.find('td', {'data-test-selector': 'RC-overallWinsRuns__row'}).get_text(
-                                         strip=True))
+                                         jokey.find('td', {'data-test-selector': 'RC-overallWinsRuns__row'}).get_text(
+                                             strip=True))
             except:
                 overAll_winning = "null"
             try:
                 overAll_percent = re.sub(r"\s", "",
-                                     jokey.find('td', {'data-test-selector': 'RC-overallPercent__row'}).get_text(
-                                         strip=True))
+                                         jokey.find('td', {'data-test-selector': 'RC-overallPercent__row'}).get_text(
+                                             strip=True))
             except:
                 overAll_percent = "null"
             # print(jokey_name, " ", winning, " ", last_percent, " ", overAll_winning, " ", overAll_percent)
-            jokey_stats = {
+            jokey= {
                 "jokey_name": jokey_name,
                 "winning": winning,
                 "last_percent": last_percent,
                 "overAll_winning": overAll_winning,
                 "overAll_parcent": overAll_percent
             }
-            print(json.dumps(jokey_stats))
+            jokey_stats.append(jokey)
+            print(json.dumps(jokey))
         print("Horse Details:..........")
         horse_data_list = stats_table[2].findAll('tr', {'class': 'ui-table__row'})
         for horse in horse_data_list:
@@ -477,40 +484,42 @@ def pageOne(pageurl):
                 horse_name = "null"
             try:
                 going_wins = re.sub(r"\s", "",
-                                horse.find('td', {'data-test-selector': 'RC-goingWinsRuns__row'}).get_text(strip=True))
+                                    horse.find('td', {'data-test-selector': 'RC-goingWinsRuns__row'}).get_text(
+                                        strip=True))
             except:
                 going_wins = "null"
             try:
                 going_percent = re.sub(r"\s", "",
-                                   horse.find('td', {'data-test-selector': 'RC-goingPercent__row'}).get_text(
-                                       strip=True))
+                                       horse.find('td', {'data-test-selector': 'RC-goingPercent__row'}).get_text(
+                                           strip=True))
             except:
                 going_percent = "null"
 
             try:
                 distance_winning = re.sub(r"\s", "",
-                                      horse.find('td', {'data-test-selector': 'RC-distanceWinsRuns__row'}).get_text(
-                                          strip=True))
+                                          horse.find('td', {'data-test-selector': 'RC-distanceWinsRuns__row'}).get_text(
+                                              strip=True))
             except:
                 distance_winning = "null"
             try:
                 course_percent = re.sub(r"\s", "",
-                                    horse.find('td', {'data-test-selector': 'RC-coursePercent__row'}).get_text(
-                                        strip=True))
+                                        horse.find('td', {'data-test-selector': 'RC-coursePercent__row'}).get_text(
+                                            strip=True))
             except:
                 course_percent = "null"
             # print(horse_name, " ", going_wins, " ", going_percent, " ", distance_winning, " ", course_percent)
-            horse_stats = {
+            horse= {
                 "horse_name": horse_name,
                 "going_wins": going_wins,
                 "going_parcent": going_percent,
                 "distance_winning": distance_winning,
                 "course_percent": course_percent
             }
-            print(json.dumps(horse_stats))
+            horse_stats.append(horse)
+            print(json.dumps(horse))
     except:
         print("Really Null")
-        pass
+        pass"""
     event = {
         'time': time,
         'meeting': meeting,
@@ -523,18 +532,24 @@ def pageOne(pageurl):
         'jokey_stats': jokey_stats,
         'horse_stats': horse_stats
     }
-    with open('jfile.json', 'a') as outfile:
+    eventj.append(event)
+    print(json.dumps(event))
+    """with open('jfile.json', 'r+') as outfile:
         data = json.load(outfile)
         data.update(event)
         outfile.seek(0)
         json.dump(data, outfile)
+    """
+
     time.sleep(3)
     # return event
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    past = time.time()
+    data = json.load(open('data.json'))
+    print(len(data))
+    """past = time.time()
     baseurl = "/racecards/"
     # page3 = "/results/46/pontefract/2021-04-19/780397"
     # target_horse = "Smullen"
@@ -577,7 +592,7 @@ if __name__ == '__main__':
     threads = min(MAX_THREADS, len(racesurlList))
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as executor:
-        executor.map(pageOne, racesurlList)
+        executor.map(pageOne, racesurlList)"""
 
     """for pg in racesurlList:
         tm = time.time()
@@ -588,4 +603,6 @@ if __name__ == '__main__':
     # print(resultInJson)
     with open('jfile.json', 'a') as outfile:
         json.dump(resultInJson, outfile)"""
-    print(time.time() - past)
+    """with open('data.json', 'a') as outfile:
+        json.dump(eventj, outfile)
+    print(time.time() - past)"""
